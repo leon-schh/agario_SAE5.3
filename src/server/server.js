@@ -24,6 +24,9 @@ const INIT_MASS_LOG = util.mathLog(config.defaultPlayerMass, config.slowBase);
 let leaderboard = [];
 let leaderboardChanged = false;
 
+let totalPlayers = 0; // Total des joueurs depuis le démarrage
+let currentPlayers = 0; // Joueurs actuellement connectés
+
 const Vector = SAT.Vector;
 
 app.use(express.static(__dirname + '/../client'));
@@ -69,6 +72,8 @@ const addPlayer = (socket) => {
             map.players.pushNew(currentPlayer);
             io.emit('playerJoin', { name: currentPlayer.name });
             console.log('Total players: ' + map.players.data.length);
+            totalPlayers++; // Incrémenter le nombre total de joueurs
+            currentPlayers++; // Incrémenter les joueurs connectés
         }
 
     });
@@ -95,6 +100,7 @@ const addPlayer = (socket) => {
         map.players.removePlayerByID(currentPlayer.id);
         console.log('[INFO] User ' + currentPlayer.name + ' has disconnected');
         socket.broadcast.emit('playerDisconnect', { name: currentPlayer.name });
+        currentPlayers--; // Incrémenter les joueurs connectés
     });
 
     socket.on('playerChat', (data) => {
@@ -338,6 +344,13 @@ const updateSpectator = (socketID) => {
         sendLeaderboard(sockets[socketID]);
     }
 }
+
+app.get('/api/players/stats', (req, res) => {
+    res.json({
+        currentPlayers,
+        totalPlayers
+    });
+});
 
 setInterval(tickGame, 1000 / 60);
 setInterval(gameloop, 1000);
