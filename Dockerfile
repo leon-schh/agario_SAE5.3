@@ -1,15 +1,20 @@
-FROM node:14-alpine
+# Utiliser l'image officielle de Node.js comme base
+FROM node:18
 
-RUN mkdir -p /usr/src/app
+# Définir le répertoire de travail à l'intérieur du conteneur
 WORKDIR /usr/src/app
 
-COPY package.json /usr/src/app/
-RUN npm install && npm cache clean --force
-COPY . /usr/src/app
+# Installer git pour cloner le dépôt
+RUN apt-get update && apt-get install -y git && apt-get clean
 
-CMD [ "npm", "start" ]
+# Cloner le dépôt GitHub
+RUN git clone https://github.com/owenashurst/agar.io-clone.git .
 
-HEALTHCHECK  --interval=5m --timeout=3s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+# Installer les dépendances du projet
+RUN npm install
 
+# Exposer le port utilisé par l'application
 EXPOSE 3000
+
+# Commande par défaut pour démarrer l'application
+CMD ["npm", "start"]
